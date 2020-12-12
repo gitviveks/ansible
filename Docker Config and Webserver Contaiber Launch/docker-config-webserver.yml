@@ -1,0 +1,53 @@
+- name: Docker Configuration and Webserver
+  hosts: B
+  tasks:
+
+  - name: Create Docker Yum Repo
+    yum_repository:
+       name: Docker
+       description: docker yum repo for rhel8
+       baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+       gpgcheck: no
+
+  - name: Install Docker (compatible version)
+    command: "yum install docker-ce --nobest -y"
+
+  - name: Start and Enable Docker Service
+    service: 
+       name: "docker"
+       state: started
+       enabled: yes
+
+  - name: Install Python3
+    package:
+       name: "python3"
+       state: present
+
+  - name: Install Docker SDK for Python3
+    pip:
+       name: "docker"
+       state: present
+
+  - name: Pull httpd Image from Docker Hub
+    docker_image:
+       name: "httpd"
+       source: pull
+
+  - name: Create Directory
+    file:
+       path: /webpages
+       state: directory
+
+  - name: Copy webpage content
+    copy:
+       content: "Testing webserver container!!\n"
+       dest: "/webpages/index.html"
+
+  - name: Launch Webserver Container
+    docker_container:
+       name: "webserver"
+       image: "httpd"
+       state: started
+       exposed_ports: "80"
+       ports: "81:80"
+       volumes: /webpages:/usr/local/apache2/htdocs
