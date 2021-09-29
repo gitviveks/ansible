@@ -1,0 +1,28 @@
+- hosts: docker
+  vars_prompt:
+  - name: webpage
+    prompt: "Enter webpage name"
+    private: no
+
+  - name: content
+    prompt: "Enter webpage content"
+    private: no
+
+  tasks:
+  - name: install httpd
+    package:
+       name: httpd
+       state: present
+
+  - name: create webpage
+    copy:
+       content: "{{content}}"
+       dest: "/var/www/html/{{ webpage }}.html"
+
+  - name: start httpd service
+    command: /usr/sbin/httpd
+    register: cmd
+
+  - debug:
+       var: cmd.stderr
+

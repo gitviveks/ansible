@@ -1,0 +1,53 @@
+- hosts: localhost
+  vars_prompt:
+  - name: container_name
+    prompt: "Enter container name"
+    private: no
+
+  vars:
+          - image_name: viveksingare/ssh
+  
+  tasks:
+  - name: install docker SDK for ansible support
+    block:
+       - command: pip3 show docker-py
+    
+    rescue:
+       - pip:
+            name: docker-py
+
+  - name: pull docker image
+    docker_image:
+       name: "{{image_name}}"
+       source: pull
+
+  - name: launch container "{{container_name}}"
+    docker_container:
+       name: "{{container_name}}"
+       image: "{{image_name}}"
+       state: started
+       interactive: yes
+       detach: yes
+       tty: yes
+       exposed_ports: 80
+       published_ports: 8088:80
+
+  - name: container info
+    docker_container_info: 
+       name: "{{container_name}}"
+    register: op
+
+  - name: container name
+    debug:
+       var: op.container.Name
+   
+  - name: container IP 
+    debug:
+       var: op.container.NetworkSettings.IPAddress
+   
+  - name: updating container host to inventory
+    blockinfile:
+       path: /etc/ansible/inventory.txt
+       block: |
+               [docker]
+               {{ op.container.NetworkSettings.IPAddress}} ansible_ssh_user=root ansible_ssh_pass=vivek
