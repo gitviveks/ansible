@@ -1,0 +1,23 @@
+- hosts: all
+  vars_files:
+          - "{{ ansible_facts['distribution'] }}.yml"
+
+  tasks:
+          - name: install webserver
+            package:
+                    name: "{{ package }}"
+                    state: present
+
+          - name: recognise distribution
+            debug:
+                    msg: "{{ ansible_facts['distribution'] }}"
+
+          - name: create webpage
+            template:
+                    dest: /var/www/html
+                    src: /etc/ansible/index.html
+
+          - name: start webserver service
+            service:
+                    name: "{{ service }}"
+                    state: started
